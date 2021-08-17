@@ -1,6 +1,7 @@
 import {useContext, useState} from 'react';
 import { AuthContext } from '../contexts/AuthContext';
 import styles from '../styles/Home.module.css'
+import { withSRRGuest } from '../utils/withSSRGuests';
 
 export default function Home() {
   const [email, setEmail] = useState('');
@@ -24,3 +25,11 @@ export default function Home() {
     </form>
   )
 }
+
+
+export const getServerSideProps = withSRRGuest(async (ctx) => {
+ 
+  return {
+    props: {}
+  }
+}) 
