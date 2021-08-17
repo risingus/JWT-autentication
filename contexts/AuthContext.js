@@ -7,9 +7,12 @@ import { api } from "../services/apiClient";
 
 export const AuthContext = createContext({})
 
+let authChannel;
+
 export function signOut(){
   destroyCookie(undefined, 'nextauth.token')
   destroyCookie(undefined, 'nextauth.refreshToken')
+  authChannel.postMessage('signOut')
   Router.push('/')
 }
 
@@ -17,6 +20,21 @@ export function signOut(){
 export function AuthProvider({children}) {
   const [user, setUser] = useState()
   const isAuthenticated = !!user;
+
+  useEffect(() => {
+    authChannel = new BroadcastChannel('auth');
+
+    authChannel.onmessage = (message) => {
+      switch (message.data) {
+        case 'signOut': {
+          signOut()
+          break;
+        }
+
+        default: break;
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const {'nextauth.token': token} = parseCookies()
@@ -59,7 +77,6 @@ export function AuthProvider({children}) {
       api.defaults.headers['Authorization'] = `Bearer ${token}`
 
       Router.push('/dashboard')
-  
     } catch (err) {
       console.log(err)
     }
@@ -67,7 +84,7 @@ export function AuthProvider({children}) {
   };
 
   return (
-    <AuthContext.Provider value={{signIn, isAuthenticated, user}}>
+    <AuthContext.Provider value={{signIn, isAuthenticated, user, signOut}}>
       {children}
     </AuthContext.Provider>
   )
